@@ -1,48 +1,24 @@
-import { useEffect, useReducer, useState } from 'react'
 import './App.css'
-import axios from 'axios'
+import { useRandom } from './hooks/useRandom'
 
-function App() {
-  const [number, setNumber] = useState<number>()
-  const [isLoading, setIsLoading] = useState<boolean>(true)
-  const [error, setError] = useState<string>()
-
-  const [key, forceAxios] = useReducer((x) => x + 1, 0)
-
-  const getRandomNumberFromApi = async (): Promise<number | undefined> => {
-    try {
-      const { data } = await axios("https://www.random.org/integers/?num=1&min=1&max=500&col=1&base=10&format=plain&rnd=new");
-      return data;
-
-    } catch (error) {
-      // throw new Error("Auxilio");
-      setError("Auxilio");
-    }
-  }
-
-  useEffect(() => {
-    setNumber(0);
-    getRandomNumberFromApi().then(setNumber)
-  }, [key])
-
-  useEffect(() => {
-    setIsLoading(true)
-    if (number || error) {
-      setIsLoading(false);
-    }
-  }, [number, error])
-
+const App = () => {
+  const query = useRandom();
   return (
     <>
       {
         <h2 style={{ display: "flex", alignItems: "center", gap: "1rem" }}> Número Aleatorio: {
-          isLoading ? <p>Loading...</p>
-            : error ? <p>Error</p> : <p>{number}</p>
+          query.isFetching
+            ? <p>Loading...</p>
+            : <p>{query.data}</p>
         } </h2 >
       }
-      <button onClick={forceAxios} disabled={isLoading}>
+      {
+        !query.isLoading && query.isError && <h3>{`${query.error}`}</h3>
+      }
+
+      <button onClick={() => query.refetch()} disabled={query.isFetching}>
         {
-          isLoading ? "....." : "new number"
+          query.isFetching ? "....." : "new number"
         }</button>
     </>
   )
